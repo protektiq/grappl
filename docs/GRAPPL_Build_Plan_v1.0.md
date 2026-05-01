@@ -374,6 +374,8 @@ a running endpoint to build against from Phase 4.
 
 **Validation gate:** `bash scripts/deploy.sh` applies cleanly. `kubectl get pods -n grappl` shows the UI pod Running. After adding the hosts entry, `curl http://grappl.local` returns the HTML shell. `curl http://grappl.local/health` returns `ok`.
 
+Because you're running on Windows, run this first: `kubectl port-forward -n grappl svc/ui 8080:80`, then run open a browser at `http://localhost:8080`
+
 ---
 
 ## Phase 2 — Ingest + Inference

@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grappl-config
+  namespace: grappl
+  labels:
+    app: grappl
+    managed-by: manual
+data:
+  INPUT_FOLDER: /data/input
+  OUTPUT_FOLDER: /data/clips
+  CONFIDENCE_THRESHOLD: "0.60"
+  CLIP_PRE_BUFFER_SECONDS: "3"
+  CLIP_POST_BUFFER_SECONDS: "5"
+  MAX_TOKENS_CLIP_NOTE: "600"
+  MAX_TOKENS_SESSION_SUMMARY: "1000"
+  ANALYSIS_MODEL: claude-sonnet-4-20250514

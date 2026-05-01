@@ -2,6 +2,8 @@
 .env
 .env.*
 !.env.example
+.env.local
+infra/k8s/secrets/secrets.yaml
 
 # Go
 bin/
