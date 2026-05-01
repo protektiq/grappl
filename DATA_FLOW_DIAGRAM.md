@@ -27,6 +27,11 @@ flowchart LR
   ingestWatcher --> inferenceService[InferenceService]
   inferenceService --> clipService[ClipService]
   clipService --> analysisService[AnalysisService]
+  ingestWatcher --> sharedDbPackage[SharedDbPackage]
+  inferenceService --> sharedDbPackage
+  clipService --> sharedDbPackage
+  gatewayService[GatewayService] --> sharedDbPackage
+  sharedDbPackage --> supabaseDb[SupabaseDB]
   grapplSecrets --> ingestWatcher
   grapplSecrets --> inferenceService
   grapplSecrets --> clipService
@@ -35,13 +40,13 @@ flowchart LR
   grapplConfig --> inferenceService
   grapplConfig --> clipService
   grapplConfig --> analysisService
-  grapplConfig --> gatewayService[GatewayService]
+  grapplConfig --> gatewayService
   grapplDataPvc --> ingestWatcher
   grapplDataPvc --> inferenceService
   grapplDataPvc --> clipService
   grapplDataPvc --> analysisService
   grapplDataPvc --> gatewayService
-  analysisService --> supabaseDb[SupabaseDB]
+  analysisService --> supabaseDb
   gatewayService --> supabaseDb
   supabaseDb --> uiLibrary[UILibrary]
 ```
