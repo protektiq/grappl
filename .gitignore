@@ -37,3 +37,8 @@ kubeconfig
 Thumbs.db
 .idea/
 .vscode/
+
+# PRD and Build Plan
+docs/GRAPPL_PRD_MVP_v1.0.md
+docs/GRAPPL_Build_Plan_v1.0.md
+DATA_FLOW_DIAGRAM.md
