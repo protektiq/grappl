@@ -267,6 +267,10 @@ Also create scripts/build-images.sh that:
 
 **Validation gate:** `bash scripts/build-images.sh` completes. `docker images | grep grappl` shows all six images. Each image runs without error when launched with `docker run --rm grappl/{service}:local` (they will exit immediately since logic is stubbed, but must not panic or produce image errors).
 
+instead of `docker images | grep grappl`, run this instead show all six images:
+eval "$(minikube docker-env -p grappl)"
+docker images --format '{{.Repository}}:{{.Tag}}\t{{.Size}}' | grep '^grappl/'
+
 ---
 
 ### Task 1.5 — Kubernetes Secret Manifests & Config
