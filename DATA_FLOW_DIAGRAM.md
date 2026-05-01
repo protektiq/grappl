@@ -2,6 +2,17 @@
 
 ```mermaid
 flowchart LR
+  devOperator[DeveloperOrCI] --> runMigrationsScript[scripts_run_migrations_sh]
+  runMigrationsScript --> supabaseMigrationsInfra[infra_supabase_migrations_001_010]
+  supabaseMigrationsInfra --> supabaseMigrationsCliMirror[supabase_migrations_001_010]
+  supabaseMigrationsCliMirror --> supabaseCliPush[supabase_db_push_local_yes]
+  supabaseCliPush --> dbSchema[DbSchemaTablesIndexesConstraints]
+  dbSchema --> dbSeedData[DefaultPractitionerAndEventTypes]
+  dbSchema --> dbRlsPolicies[RlsPoliciesServiceRole]
+  dbSchema --> dbSessionsTrigger[SessionsUpdatedAtTrigger]
+  runMigrationsScript --> migrationChecks[RowCountAndIntegrityChecks]
+  migrationChecks --> buildValidationGate[MigrationValidationGate]
+
   localSource[LocalSourceCode] --> buildScript[scripts_build_images.sh]
   buildScript --> minikubeDocker[MinikubeDockerDaemon]
   minikubeDocker --> localImages[grappl_service_local_images]
