@@ -1,0 +1,1632 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GRAPPL — BJJ Film Intelligence</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Mono:wght@300;400;500&family=Bebas+Neue&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --black: #080808;
+    --white: #f5f5f0;
+    --scarlet: #c1121f;
+    --scarlet-dim: rgba(193, 18, 31, 0.15);
+    --scarlet-mid: rgba(193, 18, 31, 0.4);
+    --grey-1: #1a1a1a;
+    --grey-2: #2a2a2a;
+    --grey-3: #444;
+    --grey-4: #888;
+    --font-display: 'Bebas Neue', sans-serif;
+    --font-serif: 'Cormorant Garamond', serif;
+    --font-mono: 'DM Mono', monospace;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--black);
+    color: var(--white);
+    font-family: var(--font-serif);
+    font-weight: 300;
+    font-size: 18px;
+    overflow-x: hidden;
+    cursor: default;
+  }
+
+  /* NOISE OVERLAY */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    opacity: 0.35;
+    pointer-events: none;
+    z-index: 9999;
+  }
+
+  /* NAV */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 24px 48px;
+    background: linear-gradient(to bottom, rgba(8,8,8,0.95) 0%, transparent 100%);
+    backdrop-filter: blur(4px);
+  }
+
+  .nav-logo {
+    font-family: var(--font-display);
+    font-size: 28px;
+    letter-spacing: 0.12em;
+    color: var(--white);
+    text-decoration: none;
+  }
+
+  .nav-logo span { color: var(--scarlet); }
+
+  .nav-links {
+    display: flex;
+    gap: 40px;
+    list-style: none;
+  }
+
+  .nav-links a {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--grey-4);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+
+  .nav-links a:hover { color: var(--white); }
+
+  .nav-cta {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--scarlet);
+    text-decoration: none;
+    border: 1px solid var(--scarlet);
+    padding: 10px 20px;
+    transition: all 0.2s;
+  }
+
+  .nav-cta:hover {
+    background: var(--scarlet);
+    color: var(--white);
+  }
+
+  /* HERO */
+  .hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: 0 48px 80px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero-video-bg {
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 60% 50% at 70% 40%, rgba(193,18,31,0.08) 0%, transparent 70%),
+      radial-gradient(ellipse 40% 60% at 20% 80%, rgba(193,18,31,0.05) 0%, transparent 60%);
+  }
+
+  .hero-grid {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+    background-size: 80px 80px;
+    mask-image: linear-gradient(to bottom, transparent 0%, black 30%, black 70%, transparent 100%);
+  }
+
+  .hero-eyebrow {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--scarlet);
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .hero-eyebrow::before {
+    content: '';
+    width: 40px;
+    height: 1px;
+    background: var(--scarlet);
+  }
+
+  .hero-headline {
+    font-family: var(--font-display);
+    font-size: clamp(72px, 10vw, 144px);
+    line-height: 0.92;
+    letter-spacing: 0.04em;
+    color: var(--white);
+    margin-bottom: 32px;
+    position: relative;
+  }
+
+  .hero-headline em {
+    font-style: italic;
+    color: var(--scarlet);
+  }
+
+  .hero-sub {
+    font-family: var(--font-serif);
+    font-size: 22px;
+    font-weight: 300;
+    font-style: italic;
+    color: var(--grey-4);
+    max-width: 520px;
+    line-height: 1.6;
+    margin-bottom: 48px;
+  }
+
+  .hero-actions {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+  }
+
+  .btn-primary {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    background: var(--scarlet);
+    color: var(--white);
+    border: none;
+    padding: 16px 36px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none;
+  }
+
+  .btn-primary:hover { background: #e8141f; }
+
+  .btn-ghost {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    background: transparent;
+    color: var(--grey-4);
+    border: 1px solid var(--grey-3);
+    padding: 16px 36px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none;
+  }
+
+  .btn-ghost:hover { color: var(--white); border-color: var(--white); }
+
+  .hero-scroll {
+    position: absolute;
+    right: 48px;
+    bottom: 80px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    color: var(--grey-3);
+    text-transform: uppercase;
+    writing-mode: vertical-rl;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .hero-scroll::after {
+    content: '';
+    width: 1px;
+    height: 60px;
+    background: linear-gradient(to bottom, var(--grey-3), transparent);
+  }
+
+  /* FILM STRIP TICKER */
+  .ticker-wrap {
+    background: var(--grey-1);
+    border-top: 1px solid var(--grey-2);
+    border-bottom: 1px solid var(--grey-2);
+    padding: 14px 0;
+    overflow: hidden;
+  }
+
+  .ticker-track {
+    display: flex;
+    gap: 64px;
+    animation: ticker 30s linear infinite;
+    white-space: nowrap;
+  }
+
+  .ticker-item {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--grey-4);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-shrink: 0;
+  }
+
+  .ticker-item .dot {
+    width: 4px;
+    height: 4px;
+    background: var(--scarlet);
+    border-radius: 50%;
+  }
+
+  @keyframes ticker {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+  }
+
+  /* DASHBOARD SECTION */
+  .section {
+    padding: 120px 48px;
+  }
+
+  .section-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--scarlet);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--grey-2);
+    max-width: 60px;
+  }
+
+  .section-title {
+    font-family: var(--font-serif);
+    font-size: clamp(36px, 5vw, 64px);
+    font-weight: 300;
+    line-height: 1.1;
+    color: var(--white);
+    margin-bottom: 16px;
+  }
+
+  .section-title em { font-style: italic; color: var(--grey-4); }
+
+  /* MAIN DASHBOARD */
+  .dashboard {
+    background: var(--black);
+    border: 1px solid var(--grey-2);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-top: 64px;
+    box-shadow: 0 0 120px rgba(193,18,31,0.06), 0 40px 80px rgba(0,0,0,0.6);
+  }
+
+  .dash-header {
+    background: var(--grey-1);
+    border-bottom: 1px solid var(--grey-2);
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .dash-dots {
+    display: flex;
+    gap: 8px;
+  }
+
+  .dash-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--grey-3);
+  }
+
+  .dash-dot:first-child { background: #c1121f; }
+  .dash-dot:nth-child(2) { background: #888; }
+
+  .dash-title {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    color: var(--grey-4);
+  }
+
+  .dash-status {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    color: var(--scarlet);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .dash-status::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    background: var(--scarlet);
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  .dash-body {
+    display: grid;
+    grid-template-columns: 280px 1fr 300px;
+    min-height: 640px;
+  }
+
+  /* LEFT SIDEBAR */
+  .dash-sidebar {
+    border-right: 1px solid var(--grey-2);
+    padding: 24px 0;
+  }
+
+  .sidebar-section-label {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--grey-3);
+    padding: 0 20px;
+    margin-bottom: 8px;
+    margin-top: 20px;
+  }
+
+  .sidebar-section-label:first-child { margin-top: 0; }
+
+  .sidebar-item {
+    padding: 10px 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    transition: background 0.15s;
+    border-left: 2px solid transparent;
+  }
+
+  .sidebar-item:hover { background: rgba(255,255,255,0.03); }
+
+  .sidebar-item.active {
+    background: var(--scarlet-dim);
+    border-left-color: var(--scarlet);
+  }
+
+  .sidebar-icon {
+    width: 16px;
+    height: 16px;
+    opacity: 0.5;
+  }
+
+  .sidebar-item.active .sidebar-icon { opacity: 1; }
+
+  .sidebar-item-text {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.05em;
+    color: var(--grey-4);
+  }
+
+  .sidebar-item.active .sidebar-item-text { color: var(--white); }
+
+  .sidebar-badge {
+    margin-left: auto;
+    font-family: var(--font-mono);
+    font-size: 9px;
+    background: var(--scarlet);
+    color: var(--white);
+    padding: 2px 6px;
+    border-radius: 2px;
+  }
+
+  .sidebar-item.active .sidebar-badge { display: flex; }
+
+  /* MAIN CONTENT */
+  .dash-main {
+    border-right: 1px solid var(--grey-2);
+    display: flex;
+    flex-direction: column;
+  }
+
+  .dash-toolbar {
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--grey-2);
+    display: flex;
+    gap: 12px;
+    align-items: center;
+  }
+
+  .toolbar-filter {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    color: var(--grey-4);
+    background: transparent;
+    border: 1px solid var(--grey-2);
+    padding: 6px 14px;
+    cursor: pointer;
+    text-transform: uppercase;
+    transition: all 0.15s;
+  }
+
+  .toolbar-filter.active, .toolbar-filter:hover {
+    border-color: var(--scarlet);
+    color: var(--white);
+  }
+
+  .toolbar-filter.active { background: var(--scarlet-dim); }
+
+  .toolbar-search {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--grey-1);
+    border: 1px solid var(--grey-2);
+    padding: 6px 14px;
+  }
+
+  .toolbar-search input {
+    background: transparent;
+    border: none;
+    outline: none;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--white);
+    letter-spacing: 0.1em;
+    width: 140px;
+  }
+
+  .toolbar-search input::placeholder { color: var(--grey-3); }
+
+  /* CLIP GRID */
+  .clip-grid {
+    padding: 24px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    flex: 1;
+    align-content: start;
+  }
+
+  .clip-card {
+    background: var(--grey-1);
+    border: 1px solid var(--grey-2);
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .clip-card:hover {
+    border-color: var(--grey-3);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  }
+
+  .clip-card.featured {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: 240px 1fr;
+  }
+
+  .clip-thumb {
+    aspect-ratio: 16/9;
+    background: var(--grey-2);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .clip-card.featured .clip-thumb {
+    aspect-ratio: auto;
+    height: 100%;
+  }
+
+  .clip-thumb-inner {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .clip-thumb-bg-1 {
+    background: linear-gradient(135deg, #1a0a0a 0%, #2a0f0f 50%, #1a0808 100%);
+  }
+  .clip-thumb-bg-2 {
+    background: linear-gradient(135deg, #0a0a1a 0%, #0f0f2a 50%, #080816 100%);
+  }
+  .clip-thumb-bg-3 {
+    background: linear-gradient(135deg, #0a1a0a 0%, #0f2a0f 50%, #081608 100%);
+  }
+  .clip-thumb-bg-4 {
+    background: linear-gradient(135deg, #1a1a0a 0%, #2a2a0f 50%, #161608 100%);
+  }
+  .clip-thumb-bg-5 {
+    background: linear-gradient(135deg, #1a0a1a 0%, #2a0f2a 50%, #160816 100%);
+  }
+
+  .clip-play-btn {
+    width: 40px;
+    height: 40px;
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0,0,0,0.4);
+    transition: all 0.2s;
+  }
+
+  .clip-card:hover .clip-play-btn {
+    background: var(--scarlet);
+    border-color: var(--scarlet);
+  }
+
+  .clip-play-btn svg { width: 14px; height: 14px; fill: white; margin-left: 2px; }
+
+  .clip-duration {
+    position: absolute;
+    bottom: 8px;
+    right: 8px;
+    font-family: var(--font-mono);
+    font-size: 9px;
+    background: rgba(0,0,0,0.7);
+    color: var(--white);
+    padding: 2px 6px;
+    letter-spacing: 0.05em;
+  }
+
+  .clip-tag {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    font-family: var(--font-mono);
+    font-size: 8px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 3px 8px;
+  }
+
+  .clip-tag.submission { background: var(--scarlet); color: white; }
+  .clip-tag.position { background: rgba(255,255,255,0.1); color: var(--grey-4); border: 1px solid var(--grey-3); }
+
+  .clip-info {
+    padding: 14px 16px;
+  }
+
+  .clip-title {
+    font-family: var(--font-serif);
+    font-size: 15px;
+    font-weight: 400;
+    color: var(--white);
+    margin-bottom: 6px;
+    line-height: 1.3;
+  }
+
+  .clip-meta {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    color: var(--grey-4);
+    text-transform: uppercase;
+    display: flex;
+    gap: 12px;
+  }
+
+  .clip-meta span { color: var(--grey-3); }
+  .clip-meta strong { color: var(--grey-4); font-weight: 400; }
+
+  .clip-confidence {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 8px;
+  }
+
+  .confidence-bar {
+    height: 2px;
+    flex: 1;
+    background: var(--grey-2);
+    position: relative;
+  }
+
+  .confidence-fill {
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    background: var(--scarlet);
+  }
+
+  .confidence-label {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    color: var(--scarlet);
+    letter-spacing: 0.05em;
+    white-space: nowrap;
+  }
+
+  /* RIGHT PANEL */
+  .dash-panel {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .panel-section {
+    padding: 20px;
+    border-bottom: 1px solid var(--grey-2);
+  }
+
+  .panel-label {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--grey-3);
+    margin-bottom: 16px;
+  }
+
+  /* AI COACHING CARD */
+  .coaching-card {
+    background: var(--grey-1);
+    border: 1px solid var(--grey-2);
+    border-left: 2px solid var(--scarlet);
+    padding: 16px;
+  }
+
+  .coaching-card .coaching-label {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--scarlet);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .coaching-card p {
+    font-family: var(--font-serif);
+    font-size: 13px;
+    font-style: italic;
+    color: var(--grey-4);
+    line-height: 1.7;
+  }
+
+  .coaching-card p strong {
+    color: var(--white);
+    font-weight: 400;
+    font-style: normal;
+  }
+
+  /* STATS */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .stat-item {
+    background: var(--grey-1);
+    border: 1px solid var(--grey-2);
+    padding: 14px;
+    text-align: center;
+  }
+
+  .stat-value {
+    font-family: var(--font-display);
+    font-size: 32px;
+    color: var(--white);
+    letter-spacing: 0.05em;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+
+  .stat-value.highlight { color: var(--scarlet); }
+
+  .stat-label {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--grey-4);
+  }
+
+  /* TIMELINE */
+  .timeline {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .timeline-item {
+    display: flex;
+    gap: 14px;
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    align-items: flex-start;
+  }
+
+  .timeline-time {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--scarlet);
+    letter-spacing: 0.05em;
+    min-width: 40px;
+    padding-top: 1px;
+  }
+
+  .timeline-event {
+    font-family: var(--font-serif);
+    font-size: 12px;
+    color: var(--grey-4);
+    line-height: 1.5;
+  }
+
+  .timeline-event strong {
+    color: var(--white);
+    font-weight: 400;
+  }
+
+  /* POSITION HEATMAP */
+  .heatmap {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 4px;
+  }
+
+  .heatmap-cell {
+    aspect-ratio: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-mono);
+    font-size: 8px;
+    letter-spacing: 0.05em;
+    color: var(--white);
+    text-align: center;
+    gap: 4px;
+    cursor: pointer;
+    transition: opacity 0.15s;
+    padding: 4px;
+  }
+
+  .heatmap-cell:hover { opacity: 0.8; }
+
+  .heatmap-val {
+    font-family: var(--font-display);
+    font-size: 20px;
+    letter-spacing: 0.05em;
+    line-height: 1;
+  }
+
+  /* FEATURES SECTION */
+  .features {
+    padding: 120px 48px;
+    background: var(--grey-1);
+  }
+
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: var(--grey-2);
+    margin-top: 64px;
+  }
+
+  .feature-card {
+    background: var(--grey-1);
+    padding: 48px 40px;
+    position: relative;
+    overflow: hidden;
+    transition: background 0.3s;
+  }
+
+  .feature-card:hover { background: rgba(30,30,30,1); }
+
+  .feature-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: transparent;
+    transition: background 0.3s;
+  }
+
+  .feature-card:hover::before { background: var(--scarlet); }
+
+  .feature-number {
+    font-family: var(--font-display);
+    font-size: 64px;
+    color: var(--grey-2);
+    line-height: 1;
+    margin-bottom: 24px;
+    letter-spacing: 0.05em;
+  }
+
+  .feature-title {
+    font-family: var(--font-serif);
+    font-size: 26px;
+    font-weight: 300;
+    color: var(--white);
+    margin-bottom: 16px;
+    line-height: 1.2;
+  }
+
+  .feature-title em { font-style: italic; color: var(--grey-4); }
+
+  .feature-desc {
+    font-family: var(--font-serif);
+    font-size: 15px;
+    font-weight: 300;
+    color: var(--grey-4);
+    line-height: 1.8;
+  }
+
+  .feature-tag {
+    margin-top: 24px;
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--scarlet);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .feature-tag::before {
+    content: '';
+    width: 20px;
+    height: 1px;
+    background: var(--scarlet);
+  }
+
+  /* PIPELINE SECTION */
+  .pipeline {
+    padding: 120px 48px;
+  }
+
+  .pipeline-flow {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    margin-top: 64px;
+    overflow-x: auto;
+    padding-bottom: 24px;
+  }
+
+  .pipeline-node {
+    flex-shrink: 0;
+    background: var(--grey-1);
+    border: 1px solid var(--grey-2);
+    padding: 28px 32px;
+    text-align: center;
+    position: relative;
+    min-width: 160px;
+    transition: border-color 0.2s;
+  }
+
+  .pipeline-node:hover { border-color: var(--scarlet); }
+
+  .pipeline-node-icon {
+    font-size: 28px;
+    margin-bottom: 12px;
+    display: block;
+  }
+
+  .pipeline-node-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--grey-4);
+    margin-bottom: 6px;
+  }
+
+  .pipeline-node-tech {
+    font-family: var(--font-mono);
+    font-size: 8px;
+    letter-spacing: 0.1em;
+    color: var(--scarlet);
+    text-transform: uppercase;
+  }
+
+  .pipeline-arrow {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    padding: 0 4px;
+  }
+
+  .pipeline-arrow svg {
+    width: 32px;
+    height: 16px;
+    fill: none;
+    stroke: var(--grey-3);
+    stroke-width: 1;
+  }
+
+  /* UPLOAD ZONE */
+  .upload-zone {
+    margin-top: 64px;
+    border: 1px dashed var(--grey-3);
+    padding: 80px 48px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .upload-zone:hover {
+    border-color: var(--scarlet);
+    background: var(--scarlet-dim);
+  }
+
+  .upload-zone-icon {
+    font-size: 48px;
+    margin-bottom: 24px;
+    display: block;
+  }
+
+  .upload-zone-title {
+    font-family: var(--font-serif);
+    font-size: 32px;
+    font-weight: 300;
+    color: var(--white);
+    margin-bottom: 12px;
+  }
+
+  .upload-zone-sub {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    color: var(--grey-4);
+    text-transform: uppercase;
+  }
+
+  /* FOOTER */
+  footer {
+    background: var(--grey-1);
+    border-top: 1px solid var(--grey-2);
+    padding: 60px 48px 40px;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 48px;
+  }
+
+  .footer-brand .logo {
+    font-family: var(--font-display);
+    font-size: 32px;
+    letter-spacing: 0.12em;
+    color: var(--white);
+    margin-bottom: 16px;
+  }
+
+  .footer-brand .logo span { color: var(--scarlet); }
+
+  .footer-brand p {
+    font-family: var(--font-serif);
+    font-size: 14px;
+    font-style: italic;
+    color: var(--grey-4);
+    line-height: 1.7;
+  }
+
+  .footer-col-label {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--grey-3);
+    margin-bottom: 20px;
+  }
+
+  .footer-links {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .footer-links a {
+    font-family: var(--font-serif);
+    font-size: 15px;
+    color: var(--grey-4);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+
+  .footer-links a:hover { color: var(--white); }
+
+  .footer-bottom {
+    border-top: 1px solid var(--grey-2);
+    padding: 24px 48px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .footer-bottom p {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.12em;
+    color: var(--grey-3);
+    text-transform: uppercase;
+  }
+
+  /* ANIMATIONS */
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .animate-in {
+    animation: fadeInUp 0.8s ease forwards;
+  }
+
+  .delay-1 { animation-delay: 0.1s; opacity: 0; }
+  .delay-2 { animation-delay: 0.25s; opacity: 0; }
+  .delay-3 { animation-delay: 0.4s; opacity: 0; }
+  .delay-4 { animation-delay: 0.55s; opacity: 0; }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: var(--black); }
+  ::-webkit-scrollbar-thumb { background: var(--grey-2); }
+  ::-webkit-scrollbar-thumb:hover { background: var(--grey-3); }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="nav-logo">GRAP<span>PL</span></a>
+  <ul class="nav-links">
+    <li><a href="#">Film Library</a></li>
+    <li><a href="#">Analysis</a></li>
+    <li><a href="#">Pipeline</a></li>
+    <li><a href="#">Settings</a></li>
+  </ul>
+  <a href="#" class="nav-cta">Launch App</a>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-video-bg"></div>
+  <div class="hero-grid"></div>
+
+  <div class="hero-eyebrow animate-in">BJJ Film Intelligence Platform</div>
+
+  <h1 class="hero-headline animate-in delay-1">
+    EVERY<br>ROLL<br><em>DECODED</em>
+  </h1>
+
+  <p class="hero-sub animate-in delay-2">
+    AI-powered grappling film review. Drop footage in, get submission detections, positional analysis, and coaching narrative — automatically.
+  </p>
+
+  <div class="hero-actions animate-in delay-3">
+    <a href="#dashboard" class="btn-primary">View Dashboard</a>
+    <a href="#pipeline" class="btn-ghost">How It Works</a>
+  </div>
+
+  <div class="hero-scroll">Scroll</div>
+</section>
+
+<!-- TICKER -->
+<div class="ticker-wrap">
+  <div class="ticker-track">
+    <div class="ticker-item"><span class="dot"></span> Rear Naked Choke Detected</div>
+    <div class="ticker-item"><span class="dot"></span> Back Take — 1:42</div>
+    <div class="ticker-item"><span class="dot"></span> Triangle Attempt — High Confidence</div>
+    <div class="ticker-item"><span class="dot"></span> Mount Established — 3:15</div>
+    <div class="ticker-item"><span class="dot"></span> Armbar Defense — Kimura Counter</div>
+    <div class="ticker-item"><span class="dot"></span> Single Leg Failed → Turtle</div>
+    <div class="ticker-item"><span class="dot"></span> Guard Retention — Successful</div>
+    <div class="ticker-item"><span class="dot"></span> Heel Hook — Leg Entanglement</div>
+    <div class="ticker-item"><span class="dot"></span> Rear Naked Choke Detected</div>
+    <div class="ticker-item"><span class="dot"></span> Back Take — 1:42</div>
+    <div class="ticker-item"><span class="dot"></span> Triangle Attempt — High Confidence</div>
+    <div class="ticker-item"><span class="dot"></span> Mount Established — 3:15</div>
+    <div class="ticker-item"><span class="dot"></span> Armbar Defense — Kimura Counter</div>
+    <div class="ticker-item"><span class="dot"></span> Single Leg Failed → Turtle</div>
+    <div class="ticker-item"><span class="dot"></span> Guard Retention — Successful</div>
+    <div class="ticker-item"><span class="dot"></span> Heel Hook — Leg Entanglement</div>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<section class="section" id="dashboard">
+  <div class="section-label">Film Library</div>
+  <h2 class="section-title">Your Intelligence<br><em>Command Center</em></h2>
+
+  <div class="dashboard">
+    <div class="dash-header">
+      <div class="dash-dots">
+        <div class="dash-dot"></div>
+        <div class="dash-dot"></div>
+        <div class="dash-dot"></div>
+      </div>
+      <div class="dash-title">GRAPPL — Film Intelligence Dashboard</div>
+      <div class="dash-status">Processing 1 video</div>
+    </div>
+
+    <div class="dash-body">
+
+      <!-- SIDEBAR -->
+      <div class="dash-sidebar">
+        <div class="sidebar-section-label">Library</div>
+        <div class="sidebar-item active">
+          <svg class="sidebar-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="1" y="1" width="14" height="10" rx="1"/><path d="M5 14h6M8 11v3"/></svg>
+          <span class="sidebar-item-text">All Clips</span>
+          <span class="sidebar-badge">24</span>
+        </div>
+        <div class="sidebar-item">
+          <svg class="sidebar-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2"><circle cx="8" cy="8" r="6"/><path d="M8 5v3l2 2"/></svg>
+          <span class="sidebar-item-text">Submissions</span>
+        </div>
+        <div class="sidebar-item">
+          <svg class="sidebar-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M2 8h12M8 2v12"/></svg>
+          <span class="sidebar-item-text">Positions</span>
+        </div>
+        <div class="sidebar-item">
+          <svg class="sidebar-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M1 12L5 4l4 5 3-3 3 4"/></svg>
+          <span class="sidebar-item-text">Trends</span>
+        </div>
+
+        <div class="sidebar-section-label">Sessions</div>
+        <div class="sidebar-item">
+          <svg class="sidebar-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="2" y="3" width="12" height="11" rx="1"/><path d="M5 1v4M11 1v4M2 7h12"/></svg>
+          <span class="sidebar-item-text">Apr 28 — Sparring</span>
+        </div>
+        <div class="sidebar-item">
+          <svg class="sidebar-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="2" y="3" width="12" height="11" rx="1"/><path d="M5 1v4M11 1v4M2 7h12"/></svg>
+          <span class="sidebar-item-text">Apr 25 — Competition</span>
+        </div>
+        <div class="sidebar-item">
+          <svg class="sidebar-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="2" y="3" width="12" height="11" rx="1"/><path d="M5 1v4M11 1v4M2 7h12"/></svg>
+          <span class="sidebar-item-text">Apr 22 — Drilling</span>
+        </div>
+
+        <div class="sidebar-section-label">System</div>
+        <div class="sidebar-item">
+          <svg class="sidebar-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2"><circle cx="8" cy="8" r="3"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.5 3.5l1.4 1.4M11.1 11.1l1.4 1.4M3.5 12.5l1.4-1.4M11.1 4.9l1.4-1.4"/></svg>
+          <span class="sidebar-item-text">Model Settings</span>
+        </div>
+        <div class="sidebar-item">
+          <svg class="sidebar-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M8 1L10 6h5l-4 3 1.5 5L8 11l-4.5 3L5 9 1 6h5z"/></svg>
+          <span class="sidebar-item-text">Artifact Signing</span>
+        </div>
+      </div>
+
+      <!-- MAIN CONTENT -->
+      <div class="dash-main">
+        <div class="dash-toolbar">
+          <button class="toolbar-filter active">All</button>
+          <button class="toolbar-filter">Submissions</button>
+          <button class="toolbar-filter">Positions</button>
+          <button class="toolbar-filter">Escapes</button>
+          <div class="toolbar-search">
+            <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="#888" stroke-width="1.5"><circle cx="7" cy="7" r="5"/><path d="M11 11l3 3"/></svg>
+            <input type="text" placeholder="Search clips...">
+          </div>
+        </div>
+
+        <div class="clip-grid">
+
+          <!-- FEATURED CLIP -->
+          <div class="clip-card featured">
+            <div class="clip-thumb clip-thumb-bg-1">
+              <div class="clip-thumb-inner">
+                <div class="clip-play-btn">
+                  <svg viewBox="0 0 12 12"><polygon points="2,1 11,6 2,11"/></svg>
+                </div>
+              </div>
+              <span class="clip-tag submission">Submission</span>
+              <span class="clip-duration">0:18</span>
+            </div>
+            <div class="clip-info" style="padding: 24px;">
+              <div style="font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.15em; color: var(--scarlet); text-transform: uppercase; margin-bottom: 10px;">Latest Detection</div>
+              <div class="clip-title" style="font-size: 20px; margin-bottom: 12px;">Rear Naked Choke — Back Control to Finish</div>
+              <div class="clip-meta" style="margin-bottom: 16px;">
+                <strong>Apr 28</strong>
+                <span>1:42 – 2:00</span>
+                <span>Session #14</span>
+              </div>
+              <div class="clip-confidence">
+                <div class="confidence-bar"><div class="confidence-fill" style="width: 94%"></div></div>
+                <span class="confidence-label">94% confidence</span>
+              </div>
+              <p style="font-family: var(--font-serif); font-size: 13px; font-style: italic; color: var(--grey-4); line-height: 1.7; margin-top: 14px;">
+                "<strong style='color: var(--white); font-style: normal;'>You gave up the back at 1:42 after a failed single leg.</strong> Transitioned to turtle position and were finished with an RNC 18 seconds later. Your chin was not tucked — work on defensive posture under fatigue."
+              </p>
+            </div>
+          </div>
+
+          <!-- CLIP 2 -->
+          <div class="clip-card">
+            <div class="clip-thumb clip-thumb-bg-2">
+              <div class="clip-thumb-inner">
+                <div class="clip-play-btn">
+                  <svg viewBox="0 0 12 12"><polygon points="2,1 11,6 2,11"/></svg>
+                </div>
+              </div>
+              <span class="clip-tag position">Position</span>
+              <span class="clip-duration">0:32</span>
+            </div>
+            <div class="clip-info">
+              <div class="clip-title">Mount Establishment — High Guard to Full Mount</div>
+              <div class="clip-meta"><strong>Apr 28</strong><span>3:15 – 3:47</span></div>
+              <div class="clip-confidence">
+                <div class="confidence-bar"><div class="confidence-fill" style="width: 88%"></div></div>
+                <span class="confidence-label">88%</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- CLIP 3 -->
+          <div class="clip-card">
+            <div class="clip-thumb clip-thumb-bg-3">
+              <div class="clip-thumb-inner">
+                <div class="clip-play-btn">
+                  <svg viewBox="0 0 12 12"><polygon points="2,1 11,6 2,11"/></svg>
+                </div>
+              </div>
+              <span class="clip-tag submission">Submission</span>
+              <span class="clip-duration">0:11</span>
+            </div>
+            <div class="clip-info">
+              <div class="clip-title">Triangle Attempt — Closed Guard</div>
+              <div class="clip-meta"><strong>Apr 25</strong><span>2:08 – 2:19</span></div>
+              <div class="clip-confidence">
+                <div class="confidence-bar"><div class="confidence-fill" style="width: 79%"></div></div>
+                <span class="confidence-label">79%</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- CLIP 4 -->
+          <div class="clip-card">
+            <div class="clip-thumb clip-thumb-bg-4">
+              <div class="clip-thumb-inner">
+                <div class="clip-play-btn">
+                  <svg viewBox="0 0 12 12"><polygon points="2,1 11,6 2,11"/></svg>
+                </div>
+              </div>
+              <span class="clip-tag position">Position</span>
+              <span class="clip-duration">0:45</span>
+            </div>
+            <div class="clip-info">
+              <div class="clip-title">Guard Retention — Hip Escape Series</div>
+              <div class="clip-meta"><strong>Apr 22</strong><span>5:12 – 5:57</span></div>
+              <div class="clip-confidence">
+                <div class="confidence-bar"><div class="confidence-fill" style="width: 91%"></div></div>
+                <span class="confidence-label">91%</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- RIGHT PANEL -->
+      <div class="dash-panel">
+
+        <div class="panel-section">
+          <div class="panel-label">Session Stats</div>
+          <div class="stats-grid">
+            <div class="stat-item">
+              <div class="stat-value highlight">7</div>
+              <div class="stat-label">Submissions</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value">24</div>
+              <div class="stat-label">Events</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value">89<span style="font-size:14px; color: var(--grey-4);">%</span></div>
+              <div class="stat-label">Avg Confidence</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value highlight">3</div>
+              <div class="stat-label">Rolls</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel-section">
+          <div class="panel-label">AI Coaching Note</div>
+          <div class="coaching-card">
+            <div class="coaching-label">
+              <svg width="8" height="8" viewBox="0 0 8 8" fill="var(--scarlet)"><circle cx="4" cy="4" r="4"/></svg>
+              LangChain Analysis
+            </div>
+            <p>Your <strong>back defense is a liability</strong> under fatigue. In all 3 sessions this week, back takes occurred after failed offensive shots — suggesting your transition game needs attention before defensive gaps can close.</p>
+          </div>
+        </div>
+
+        <div class="panel-section">
+          <div class="panel-label">Event Timeline — Apr 28</div>
+          <div class="timeline">
+            <div class="timeline-item">
+              <div class="timeline-time">0:22</div>
+              <div class="timeline-event"><strong>Guard pass</strong> — knee slice to side control</div>
+            </div>
+            <div class="timeline-item">
+              <div class="timeline-time">1:14</div>
+              <div class="timeline-event"><strong>Single leg attempt</strong> — failed, opponent sprawled</div>
+            </div>
+            <div class="timeline-item">
+              <div class="timeline-time">1:42</div>
+              <div class="timeline-event"><strong>Back taken</strong> — turtle position, hooks in</div>
+            </div>
+            <div class="timeline-item">
+              <div class="timeline-time">2:00</div>
+              <div class="timeline-event" style="color: var(--scarlet)"><strong style="color: var(--scarlet);">RNC finish</strong> — submission detected</div>
+            </div>
+            <div class="timeline-item">
+              <div class="timeline-time">3:15</div>
+              <div class="timeline-event"><strong>Mount</strong> — established from high guard</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel-section">
+          <div class="panel-label">Position Frequency</div>
+          <div class="heatmap">
+            <div class="heatmap-cell" style="background: rgba(193,18,31,0.7);">
+              <span class="heatmap-val">9</span>
+              <span>Guard</span>
+            </div>
+            <div class="heatmap-cell" style="background: rgba(193,18,31,0.45);">
+              <span class="heatmap-val">6</span>
+              <span>Back</span>
+            </div>
+            <div class="heatmap-cell" style="background: rgba(193,18,31,0.3);">
+              <span class="heatmap-val">4</span>
+              <span>Mount</span>
+            </div>
+            <div class="heatmap-cell" style="background: rgba(193,18,31,0.2);">
+              <span class="heatmap-val">3</span>
+              <span>Side</span>
+            </div>
+            <div class="heatmap-cell" style="background: rgba(193,18,31,0.15);">
+              <span class="heatmap-val">2</span>
+              <span>Half</span>
+            </div>
+            <div class="heatmap-cell" style="background: rgba(193,18,31,0.1);">
+              <span class="heatmap-val">1</span>
+              <span>Turtle</span>
+            </div>
+            <div class="heatmap-cell" style="background: rgba(193,18,31,0.07);">
+              <span class="heatmap-val">1</span>
+              <span>Leg Ent.</span>
+            </div>
+            <div class="heatmap-cell" style="background: rgba(193,18,31,0.05);">
+              <span class="heatmap-val">0</span>
+              <span>Stand.</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="features" id="features">
+  <div class="section-label">Capabilities</div>
+  <h2 class="section-title">Built on a<br><em>serious stack</em></h2>
+
+  <div class="features-grid">
+    <div class="feature-card">
+      <div class="feature-number">01</div>
+      <div class="feature-title">Vision <em>Inference</em></div>
+      <p class="feature-desc">A custom-trained Roboflow model detects positions, submission attempts, and transitions frame by frame — calibrated for the chaos of live grappling footage.</p>
+      <div class="feature-tag">Roboflow</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-number">02</div>
+      <div class="feature-title">Coaching <em>Narrative</em></div>
+      <p class="feature-desc">LangChain transforms raw detection events into structured, coaching-grade analysis — not just timestamps, but context, pattern recognition, and specific corrective feedback.</p>
+      <div class="feature-tag">LangChain + Claude</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-number">03</div>
+      <div class="feature-title">Auto <em>Clipping</em></div>
+      <p class="feature-desc">Every detected event triggers an automatic FFmpeg clip, trimmed around the event window and stored in your personal film library. No manual scrubbing.</p>
+      <div class="feature-tag">FFmpeg Pipeline</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-number">04</div>
+      <div class="feature-title">Schema <em>Evolution</em></div>
+      <p class="feature-desc">As your detection vocabulary grows — new positions, leg locks, wrestling sequences — OpenRewrite migrates your entire history without breaking a single record.</p>
+      <div class="feature-tag">OpenRewrite</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-number">05</div>
+      <div class="feature-title">Artifact <em>Signing</em></div>
+      <p class="feature-desc">Every processed clip and inference result is signed with Sigstore, giving you a verified chain of custody on your film library from day one.</p>
+      <div class="feature-tag">Sigstore</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-number">06</div>
+      <div class="feature-title">Container <em>Orchestration</em></div>
+      <p class="feature-desc">The entire pipeline runs as isolated Kubernetes services on Minikube — each stage independently scalable, observable, and ready to graduate to cloud infrastructure.</p>
+      <div class="feature-tag">Kubernetes + Minikube</div>
+    </div>
+  </div>
+</section>
+
+<!-- PIPELINE -->
+<section class="pipeline" id="pipeline">
+  <div class="section-label">Architecture</div>
+  <h2 class="section-title">The <em>Pipeline</em></h2>
+
+  <div class="pipeline-flow">
+    <div class="pipeline-node">
+      <span class="pipeline-node-icon">📂</span>
+      <div class="pipeline-node-label">Video Ingest</div>
+      <div class="pipeline-node-tech">Watched Folder</div>
+    </div>
+    <div class="pipeline-arrow">
+      <svg viewBox="0 0 32 16"><path d="M0 8h28M22 2l8 6-8 6"/></svg>
+    </div>
+    <div class="pipeline-node">
+      <span class="pipeline-node-icon">👁</span>
+      <div class="pipeline-node-label">Vision Inference</div>
+      <div class="pipeline-node-tech">Roboflow</div>
+    </div>
+    <div class="pipeline-arrow">
+      <svg viewBox="0 0 32 16"><path d="M0 8h28M22 2l8 6-8 6"/></svg>
+    </div>
+    <div class="pipeline-node">
+      <span class="pipeline-node-icon">✂️</span>
+      <div class="pipeline-node-label">Auto Clip</div>
+      <div class="pipeline-node-tech">FFmpeg</div>
+    </div>
+    <div class="pipeline-arrow">
+      <svg viewBox="0 0 32 16"><path d="M0 8h28M22 2l8 6-8 6"/></svg>
+    </div>
+    <div class="pipeline-node">
+      <span class="pipeline-node-icon">🧠</span>
+      <div class="pipeline-node-label">AI Analysis</div>
+      <div class="pipeline-node-tech">LangChain</div>
+    </div>
+    <div class="pipeline-arrow">
+      <svg viewBox="0 0 32 16"><path d="M0 8h28M22 2l8 6-8 6"/></svg>
+    </div>
+    <div class="pipeline-node">
+      <span class="pipeline-node-icon">🔏</span>
+      <div class="pipeline-node-label">Sign & Store</div>
+      <div class="pipeline-node-tech">Sigstore + Supabase</div>
+    </div>
+    <div class="pipeline-arrow">
+      <svg viewBox="0 0 32 16"><path d="M0 8h28M22 2l8 6-8 6"/></svg>
+    </div>
+    <div class="pipeline-node">
+      <span class="pipeline-node-icon">📊</span>
+      <div class="pipeline-node-label">Dashboard</div>
+      <div class="pipeline-node-tech">Film Library UI</div>
+    </div>
+  </div>
+
+  <!-- UPLOAD ZONE -->
+  <div class="upload-zone">
+    <span class="upload-zone-icon">⬆</span>
+    <div class="upload-zone-title">Drop footage to begin analysis</div>
+    <div class="upload-zone-sub">MP4 · MOV · AVI — any resolution — pipeline starts automatically</div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-brand">
+    <div class="logo">GRAP<span>PL</span></div>
+    <p>Personal BJJ film intelligence.<br>Your mat sessions, decoded.</p>
+  </div>
+  <div>
+    <div class="footer-col-label">Platform</div>
+    <ul class="footer-links">
+      <li><a href="#">Film Library</a></li>
+      <li><a href="#">Analysis Dashboard</a></li>
+      <li><a href="#">Pipeline Status</a></li>
+      <li><a href="#">Model Training</a></li>
+      <li><a href="#">Artifact Signing</a></li>
+    </ul>
+  </div>
+  <div>
+    <div class="footer-col-label">Stack</div>
+    <ul class="footer-links">
+      <li><a href="#">Roboflow Vision</a></li>
+      <li><a href="#">LangChain AI</a></li>
+      <li><a href="#">Supabase Storage</a></li>
+      <li><a href="#">OpenRewrite Schema</a></li>
+      <li><a href="#">Sigstore Signing</a></li>
+    </ul>
+  </div>
+</footer>
+
+<div class="footer-bottom">
+  <p>GRAPPL — BJJ Film Intelligence Platform</p>
+  <p>Local Instance — Minikube / Ubuntu</p>
+</div>
+
+<script>
+  // Smooth active state on toolbar filters
+  document.querySelectorAll('.toolbar-filter').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.toolbar-filter').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    });
+  });
+
+  // Clip card hover — subtle lift already via CSS
+  // Upload zone interaction
+  const uploadZone = document.querySelector('.upload-zone');
+  uploadZone.addEventListener('dragover', e => {
+    e.preventDefault();
+    uploadZone.style.borderColor = 'var(--scarlet)';
+    uploadZone.style.background = 'rgba(193,18,31,0.1)';
+  });
+  uploadZone.addEventListener('dragleave', () => {
+    uploadZone.style.borderColor = '';
+    uploadZone.style.background = '';
+  });
+
+  // Intersection observer for scroll animations
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.style.opacity = '1';
+        entry.target.style.transform = 'translateY(0)';
+        entry.target.style.transition = 'opacity 0.7s ease, transform 0.7s ease';
+      }
+    });
+  }, { threshold: 0.1 });
+
+  document.querySelectorAll('.feature-card, .pipeline-node, .stat-item').forEach(el => {
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(20px)';
+    observer.observe(el);
+  });
+</script>
+
+</body>
+</html>
