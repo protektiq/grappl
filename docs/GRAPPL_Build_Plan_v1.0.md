@@ -72,35 +72,56 @@ Do not write any application logic yet. This task is structure only.
 ```
 Create scripts/setup-minikube.sh — a fully commented bash script that:
 
+IMPORTANT: GRAPPL runs in a dedicated minikube profile named 'grappl'
+(--profile=grappl / -p grappl) to avoid interfering with any other
+applications using the default 'minikube' profile on this machine.
+Every minikube command in this script and in all other GRAPPL scripts
+must include --profile=grappl (or the short form -p grappl).
+Set MINIKUBE_PROFILE="grappl" at the top of the script and reference it
+throughout. The kubeconfig context name will also be 'grappl'; pass
+--context=grappl to kubectl commands where needed.
+
+Resource flags (--cpus, --memory, --disk-size) only apply on first
+cluster creation. Re-running the script on an existing profile is safe.
+To change resources, delete the profile first: minikube delete -p grappl
+
 1. Checks for minikube, kubectl, and docker. Exits with a clear error message
    if any are missing, telling the user what to install.
 
 2. Starts minikube with the following config:
+   - Profile: grappl  (--profile=grappl)
    - Driver: docker
    - CPUs: 4
    - Memory: 8192mb
    - Disk: 40000mb
    - Kubernetes version: stable
 
-3. Enables the following minikube addons:
+3. Enables the following minikube addons (all with --profile=grappl):
    - ingress
    - metrics-server
    - dashboard
+   Do NOT enable the registry addon — it is unreliable with the Docker
+   driver and is not needed. All images are built directly into the
+   cluster's Docker daemon via eval $(minikube docker-env -p grappl).
 
-4. Starts the minikube image registry (minikube addons enable registry)
-   and prints the registry address.
+4. Prints a note explaining the image build strategy:
+   eval $(minikube docker-env -p grappl)
+   docker build -t grappl/<service>:local services/<service>/
+   Images built this way are immediately available to Kubernetes pods
+   with no push or registry step required.
 
-5. Configures the local docker daemon to use the minikube registry
-   by running: eval $(minikube docker-env)
+5. Configures the local docker daemon to use the minikube daemon
+   by running: eval $(minikube docker-env -p grappl)
    Then prints a reminder that this eval must be re-run in any new terminal.
 
 6. Creates the grappl Kubernetes namespace:
-   kubectl apply -f infra/k8s/namespace.yaml
+   kubectl apply -f infra/k8s/namespace.yaml --context=grappl
 
 7. Prints a final status summary:
-   - minikube status
-   - kubectl get nodes
-   - minikube addons list (filtered to only show enabled addons)
+   - minikube status -p grappl
+   - kubectl get nodes --context=grappl
+   - minikube addons list -p grappl (filtered to only show enabled addons)
+   - Reminder: minikube profile grappl  (to set as active profile)
 
 Also create infra/k8s/namespace.yaml:
 
@@ -115,7 +136,7 @@ metadata:
 Make the script idempotent — running it twice should not produce errors.
 ```
 
-**Validation gate:** Running `bash scripts/setup-minikube.sh` completes without errors. `kubectl get nodes` shows a Ready node. `kubectl get namespace grappl` exists.
+**Validation gate:** Running `bash scripts/setup-minikube.sh` completes without errors. `kubectl get nodes --context=grappl` shows a Ready node. `kubectl get namespace grappl --context=grappl` exists. `minikube status -p grappl` shows Running. The default 'minikube' profile (if present) is unaffected.
 
 ---
 
@@ -130,32 +151,56 @@ Create scripts/setup-supabase.sh — a bash script that:
 2. Runs `supabase init` in the project root if a supabase/ config dir
    doesn't already exist.
 
-3. Runs `supabase start` and captures the output.
+3. After init (and before starting), patch supabase/config.toml to use
+   non-default ports so this project can run alongside other local Supabase
+   projects without port conflicts. Set the following in config.toml:
 
-4. Parses and prints the following values from supabase start output:
+   [api]
+   port = 54331
+
+   [db]
+   port = 54332
+
+   [studio]
+   port = 54333
+
+   [inbucket]
+   port = 54334
+
+   [analytics]
+   port = 54337
+
+   Use sed or a config-aware tool to set these values. Skip this step if
+   the ports are already set to the correct values (idempotent).
+
+4. Runs `supabase start` and captures the output.
+
+5. Parses and prints the following values from supabase start output:
    - API URL
    - anon key
    - service_role key
    - DB URL
    - Studio URL
 
-5. Writes these values to .env.local (gitignored) in the format:
+6. Writes these values to .env.local (gitignored) in the format:
    SUPABASE_URL=...
    SUPABASE_ANON_KEY=...
    SUPABASE_SERVICE_ROLE_KEY=...
    DATABASE_URL=...
 
-6. Prints: "Supabase Studio is available at: http://localhost:54323"
+7. Prints: "Supabase Studio is available at: http://localhost:54333"
 
-Also update .env.example to include these keys with placeholder values
-and a comment explaining where to find the real values after running
+Also update .env.example to reflect the non-default ports:
+   SUPABASE_URL=http://127.0.0.1:54331
+   SUPABASE_DB_URL=postgresql://postgres:postgres@127.0.0.1:54332/postgres
+Include a comment explaining where to find the real values after running
 setup-supabase.sh.
 
 Make the script idempotent — if supabase is already running, print
 its current status instead of erroring.
 ```
 
-**Validation gate:** `supabase status` shows all services running. Supabase Studio is reachable at `http://localhost:54323`. `.env.local` exists with all four values populated.
+**Validation gate:** `supabase status` shows all services running. Supabase Studio is reachable at `http://localhost:54333`. `.env.local` exists with all four values populated. Running the script a second time does not error.
 
 ---
 
@@ -213,7 +258,9 @@ Services and their base images:
    COPY:     ui/nginx.conf to /etc/nginx/conf.d/default.conf
 
 Also create scripts/build-images.sh that:
-- Runs eval $(minikube docker-env) to target the minikube registry
+- Runs eval $(minikube docker-env -p grappl) to target the grappl cluster's
+  Docker daemon (images built this way are immediately available to Kubernetes
+  without a push step)
 - Builds all six images with tags: grappl/{service}:local
 - Prints build success/failure for each image
 ```
@@ -311,7 +358,7 @@ a running endpoint to build against from Phase 4.
 
 5. Create scripts/add-hosts.sh:
    Prints the minikube IP and the /etc/hosts entry to add:
-   $(minikube ip)  grappl.local
+   $(minikube ip -p grappl)  grappl.local
    (Do not auto-edit /etc/hosts — just print the line for the user.)
 
 6. Create scripts/deploy.sh:
@@ -1171,8 +1218,10 @@ script that exercises the entire GRAPPL pipeline.
 The script must:
 
 1. Pre-flight checks:
-   - Verify minikube is running
-   - Verify all 6 pods are in Running state in the grappl namespace
+   - Verify the grappl minikube profile is running:
+     minikube status -p grappl | grep -q "Running"
+   - Verify all 6 pods are in Running state in the grappl namespace:
+     kubectl get pods -n grappl --context=grappl
    - Verify Supabase is reachable
    - Verify GET http://grappl.local/api/health returns 200
 
@@ -1436,6 +1485,9 @@ Complete the final hardening pass and write the project README.
    Step-by-step from clone to first video processed:
    1. Prerequisites (minikube, kubectl, docker, supabase CLI, ffmpeg)
    2. Clone and setup: scripts/setup-minikube.sh, scripts/setup-supabase.sh
+      Note: setup-minikube.sh creates a dedicated 'grappl' minikube profile
+      isolated from any other applications using the default 'minikube' profile.
+      In each new terminal: eval $(minikube docker-env -p grappl)
    3. Add API keys to .env.local (list each key and where to get it)
    4. scripts/create-secrets.sh
    5. scripts/build-images.sh
