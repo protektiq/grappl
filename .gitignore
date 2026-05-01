@@ -39,6 +39,6 @@ Thumbs.db
 .vscode/
 
 # PRD and Build Plan
+docs/*.md
 docs/GRAPPL_PRD_MVP_v1.0.md
 docs/GRAPPL_Build_Plan_v1.0.md
-DATA_FLOW_DIAGRAM.md
