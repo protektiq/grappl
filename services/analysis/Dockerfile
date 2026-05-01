@@ -1,4 +1,4 @@
-FROM cgr.dev/chainguard/python:latest-dev AS builder
+FROM python:3.12-slim AS builder
 
 WORKDIR /app
 
@@ -12,7 +12,7 @@ RUN pip install --no-cache-dir -r /app/requirements.txt
 
 COPY services/analysis/main.py /app/main.py
 
-FROM cgr.dev/chainguard/python:latest
+FROM python:3.12-slim
 
 WORKDIR /app
 

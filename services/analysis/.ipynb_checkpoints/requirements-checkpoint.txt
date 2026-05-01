@@ -1,0 +1,4 @@
+inference-sdk
+numpy
+opencv-python
+

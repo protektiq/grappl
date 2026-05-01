@@ -9,6 +9,8 @@ readonly SECRET_NAME="grappl-secrets"
 readonly MAX_VALUE_LENGTH=8192
 readonly REQUIRED_KEYS=(
   "ROBOFLOW_API_KEY"
+  "ROBOFLOW_MODEL_ID"
+  "ROBOFLOW_MODEL_VERSION"
   "ANTHROPIC_API_KEY"
   "SUPABASE_URL"
   "SUPABASE_SERVICE_ROLE_KEY"
@@ -114,10 +116,25 @@ validate_required_formats() {
 }
 
 apply_secret() {
+  local host_ip
+  host_ip="$(minikube -p grappl ssh -- ip route show default 2>/dev/null | awk '/default/ {print $3}' | head -1)"
+  if [[ -z "$host_ip" ]]; then
+    echo "[$SCRIPT_NAME] WARNING: could not detect Minikube host gateway; using 127.0.0.1 as-is" >&2
+    host_ip="127.0.0.1"
+  else
+    echo "[$SCRIPT_NAME] Replacing 127.0.0.1 with Minikube host gateway ${host_ip} in secret values."
+  fi
+
+  local tmp_env
+  tmp_env="$(mktemp)"
+  sed "s|127\.0\.0\.1|${host_ip}|g" "$ENV_FILE" > "$tmp_env"
+
   kubectl create secret generic "$SECRET_NAME" \
-    --from-env-file="$ENV_FILE" \
+    --from-env-file="$tmp_env" \
     --namespace="$NAMESPACE" \
     --dry-run=client -o yaml | kubectl apply -f -
+
+  rm -f "$tmp_env"
 }
 
 main() {

@@ -1,0 +1,70 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ingest
+  namespace: grappl
+  labels:
+    app: ingest
+    app.kubernetes.io/name: ingest
+    app.kubernetes.io/part-of: grappl
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ingest
+  template:
+    metadata:
+      labels:
+        app: ingest
+        app.kubernetes.io/name: ingest
+        app.kubernetes.io/part-of: grappl
+    spec:
+      containers:
+        - name: ingest
+          image: grappl/ingest:local
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+              name: http
+          envFrom:
+            - configMapRef:
+                name: grappl-config
+            - secretRef:
+                name: grappl-secrets
+          volumeMounts:
+            - name: grappl-data
+              mountPath: /data
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 256Mi
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            periodSeconds: 10
+      volumes:
+        - name: grappl-data
+          persistentVolumeClaim:
+            claimName: grappl-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ingest
+  namespace: grappl
+  labels:
+    app: ingest
+    app.kubernetes.io/name: ingest
+    app.kubernetes.io/part-of: grappl
+spec:
+  type: ClusterIP
+  selector:
+    app: ingest
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http

@@ -604,7 +604,7 @@ Create infra/k8s/deployments/ingest.yaml:
 - Resources: 50m CPU / 64Mi memory requests; 200m / 256Mi limits
 ```
 
-**Validation gate:** Build the image (`docker build -t grappl/ingest:local services/ingest/`). Deploy to Minikube. `kubectl logs -n grappl deployment/ingest` shows "watching /data/input". Copying a test `.mp4` into the input folder via `kubectl cp` creates a session row in Supabase and logs the session ID.
+**Validation gate:** Build the image (`docker build -t grappl/ingest:local -f services/ingest/Dockerfile .`). Deploy to Minikube `kubectl apply -f infra/k8s/deployments/ingest.yaml`. Restart `kubectl rollout restart deployment/ingest -n grappl`. `kubectl logs -n grappl deployment/ingest` shows "watching /data/input". Copying a test `.mp4` into the input folder via `kubectl cp` creates a session row in Supabase and logs the session ID.
 
 ---
 

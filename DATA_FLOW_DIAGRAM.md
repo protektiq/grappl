@@ -23,8 +23,16 @@ flowchart LR
   configmapYaml[infra_k8s_configmap_yaml] --> grapplConfig[KubernetesConfigMap_grappl_config]
   pvcYaml[infra_k8s_pvc_yaml] --> grapplDataPvc[KubernetesPVC_grappl_data]
 
-  inputVideo[InputVideo] --> ingestWatcher[IngestWatcher]
-  ingestWatcher --> inferenceService[InferenceService]
+  inputVideo[InputVideo] --> inputFolder[InputFolder_data_input]
+  inputFolder --> ingestFsWatcher[IngestFsnotifyRecursiveWatcher]
+  ingestFsWatcher --> ingestSettleCheck[IngestDelayAndStableSizeCheck]
+  ingestSettleCheck --> ingestCreateSession[IngestCreateSessionQueued]
+  ingestCreateSession --> ingestMoveFile[IngestMoveTo_data_processing_sessionId]
+  ingestMoveFile --> ingestMarkProcessing[IngestUpdateSessionStatusProcessing]
+  ingestMarkProcessing --> ingestPostInference[IngestPOSTInferenceProcess]
+  ingestPostInference --> inferenceService[InferenceService]
+  ingestPostInference --> ingestMarkError[IngestUpdateSessionStatusError]
+  ingestWatcher[IngestWatcher] --> ingestFsWatcher
   inferenceService --> clipService[ClipService]
   clipService --> analysisService[AnalysisService]
   ingestWatcher --> sharedDbPackage[SharedDbPackage]
